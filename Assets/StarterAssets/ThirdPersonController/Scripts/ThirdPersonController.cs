@@ -1,5 +1,6 @@
 ﻿using Cinemachine;
 using UnityEngine;
+using UnityEngine.UI;
 #if ENABLE_INPUT_SYSTEM 
 using UnityEngine.InputSystem;
 #endif
@@ -80,12 +81,47 @@ namespace StarterAssets
         private float _cinemachineTargetYaw;
         private float _cinemachineTargetPitch;
         private bool _transiton;
+        [SerializeField] private float feildOfView = 60f;
         [SerializeField] private float TransitonTimeout = 0.50f;
+        [SerializeField] private Transform UpTargetPosition;
+        [SerializeField] private Transform DownTargetPosition;
         [SerializeField] private CinemachineVirtualCamera cinemachineFirstPersonFollower;
         [SerializeField] private CinemachineVirtualCamera cinemachineThirdPersonFollower;
+        
+        //sprinting
+        private float _speed;
+        [SerializeField] private bool enableSprint = true;
+        [SerializeField] private bool unlimitedSprint = false;
+        [SerializeField] private float sprintDuration = 5f;
+        [SerializeField] private float sprintCooldown = .5f;
+        [SerializeField] private float sprintFOV = 80f;
+        [SerializeField] private float sprintFOVStepTime = 10f;
+
+        //Sprint Bar
+        [SerializeField] private bool useSprintBar = true;
+        [SerializeField] private bool hideBarWhenFull = true;
+        [SerializeField] private Image sprintBarBG;
+        [SerializeField] private Image sprintBar;
+        [SerializeField] private float sprintBarWidthPercent = .3f;
+        [SerializeField] private float sprintBarHeightPercent = .015f;
+
+        private CanvasGroup sprintBarCG;
+        private bool isSprinting = false;
+        private float sprintRemaining;
+        private float sprintBarWidth;
+        private float sprintBarHeight;
+        private bool isSprintCooldown = false;
+        private float sprintCooldownReset;
+
+        //crouch
+        [SerializeField] private bool enableCrouch = true;
+        [SerializeField] private float crouchHeight = .75f;
+        [SerializeField] private float speedReduction = .5f;
+
+        private bool isCrouched = false;
+        private Vector3 originalScale;
 
         // player
-        private float _speed;
         private float _animationBlend;
         private float _targetRotation = 0.0f;
         private float _rotationVelocity;
@@ -137,6 +173,15 @@ namespace StarterAssets
                 _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
             }
 
+            originalScale = transform.localScale;
+            cinemachineFirstPersonFollower.m_Lens.FieldOfView = feildOfView;
+            if (!unlimitedSprint)
+            {
+                sprintRemaining = sprintDuration;
+                sprintCooldownReset = sprintCooldown;
+            }
+            InitSprintBar();
+
         }
 
         private void Start()
@@ -158,6 +203,8 @@ namespace StarterAssets
             _jumpTimeoutDelta = JumpTimeout;
             _transitonTimeoutDelta = TransitonTimeout;
             _fallTimeoutDelta = FallTimeout;
+
+
         }
 
         private void Update()
@@ -168,10 +215,13 @@ namespace StarterAssets
             GroundedCheck();
             Move();
             Transiton();
+            if(_input.crouch && Grounded)
+                Crouch();
         }
 
         private void Transiton()
         {
+            Transform oldTransform = transform;
             if (_input.transiton && _transitonTimeoutDelta <= 0f) 
             {
                 // reset the transition timeout timer
@@ -183,12 +233,17 @@ namespace StarterAssets
                 cinemachineThirdPersonFollower.gameObject.SetActive(!_transiton);
                 if(cinemachineFirstPersonFollower.gameObject.activeSelf)
                 { 
-                    gameObject.transform.position = new Vector3(transform.position.x, transform.position.y - 50f, transform.position.x); 
+                    _controller.enabled = false;
+                    gameObject.transform.position = DownTargetPosition.position; 
+                    _controller.enabled = true;
+                    cinemachineFirstPersonFollower.m_Lens.FieldOfView = feildOfView;
                 }
 
                 if (cinemachineThirdPersonFollower.gameObject.activeSelf)
                 {
-                    gameObject.transform.position = new Vector3(transform.position.x, transform.position.y + 50f, transform.position.x);
+                    _controller.enabled |= false;
+                    gameObject.transform.position = UpTargetPosition.position;
+                    _controller.enabled = true;
                 }
                 _input.transiton = false;
                 
@@ -202,6 +257,36 @@ namespace StarterAssets
             }
 
 
+        }
+
+        private void InitSprintBar() 
+        {
+            sprintBarCG = FindFirstObjectByType<CanvasGroup>();
+
+            if (useSprintBar)
+            {
+                sprintBarBG.gameObject.SetActive(true);
+                sprintBar.gameObject.SetActive(true);
+
+                float screenWidth = Screen.width;
+                float screenHeight = Screen.height;
+
+                sprintBarWidth = screenWidth * sprintBarWidthPercent;
+                sprintBarHeight = screenHeight * sprintBarHeightPercent;
+
+                sprintBarBG.rectTransform.sizeDelta = new Vector3(sprintBarWidth, sprintBarHeight, 0f);
+                sprintBar.rectTransform.sizeDelta = new Vector3(sprintBarWidth - 2, sprintBarHeight - 2, 0f);
+
+                if (hideBarWhenFull)
+                {
+                    sprintBarCG.alpha = 0;
+                }
+            }
+            else
+            {
+                sprintBarBG.gameObject.SetActive(false);
+                sprintBar.gameObject.SetActive(false);
+            }
         }
 
         private void LateUpdate()
@@ -258,12 +343,51 @@ namespace StarterAssets
         {
             // set target speed based on move speed, sprint speed and if sprint is pressed
             float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
+            if (_input.sprint && enableSprint && targetSpeed == SprintSpeed && sprintRemaining > 0f && !isSprintCooldown)
+            {
+                cinemachineFirstPersonFollower.m_Lens.FieldOfView = Mathf.Lerp(cinemachineFirstPersonFollower.m_Lens.FieldOfView, sprintFOV, sprintFOVStepTime * Time.deltaTime);
+                // Drain sprint remaining while sprinting
+                if (!unlimitedSprint)
+                {
+                    sprintRemaining -= 1 * Time.deltaTime;
+                    if (sprintRemaining <= 0)
+                    {
+                        isSprinting = false;
+                        isSprintCooldown = true;
+                    }
+                }
+            }
+            else 
+            {
+                targetSpeed = MoveSpeed;
+                sprintRemaining = Mathf.Clamp(sprintRemaining += 1 * Time.deltaTime, 0, sprintDuration);
+            }
+
+            if (isSprintCooldown)
+            {
+                sprintCooldown -= 1 * Time.deltaTime;
+                if (sprintCooldown <= 0)
+                {
+                    isSprintCooldown = false;
+                }
+            }
+            else
+            {
+                sprintCooldown = sprintCooldownReset;
+            }
+
+            if (useSprintBar && !unlimitedSprint)
+            {
+                float sprintRemainingPercent = sprintRemaining / sprintDuration;
+                sprintBar.transform.localScale = new Vector3(sprintRemainingPercent, 1f, 1f);
+            }
 
             // a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
 
             // note: Vector2's == operator uses approximation so is not floating point error prone, and is cheaper than magnitude
             // if there is no input, set the target speed to 0
             if (_input.move == Vector2.zero) targetSpeed = 0.0f;
+            if (isCrouched) targetSpeed *= speedReduction;
 
             // a reference to the players current horizontal velocity
             float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
@@ -298,6 +422,14 @@ namespace StarterAssets
             // if there is a move input rotate player when the player is moving
             if (_input.move != Vector2.zero)
             {
+                if (hideBarWhenFull && !unlimitedSprint && targetSpeed == SprintSpeed)
+                {
+                    sprintBarCG.alpha += 5 * Time.deltaTime;
+                }
+                if (hideBarWhenFull && sprintRemaining == sprintDuration && targetSpeed == MoveSpeed)
+                {
+                    sprintBarCG.alpha -= 3 * Time.deltaTime;
+                }
                 _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
                                   _mainCamera.transform.eulerAngles.y;
                 float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
@@ -345,6 +477,10 @@ namespace StarterAssets
                 // Jump
                 if (_input.jump && _jumpTimeoutDelta <= 0.0f)
                 {
+                    if (isCrouched)
+                    {
+                        Crouch();
+                    }
                     // the square root of H * -2 * G = how much velocity needed to reach desired height
                     _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
 
@@ -383,12 +519,30 @@ namespace StarterAssets
                 // if we are not grounded, do not jump
                 _input.jump = false;
             }
-
             // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
             if (_verticalVelocity < _terminalVelocity)
             {
                 _verticalVelocity += Gravity * Time.deltaTime;
             }
+        }
+
+        private void Crouch()
+        {
+            // Stands player up to full height
+            // Brings walkSpeed back up to original speed
+            if (isCrouched)
+            {
+                transform.localScale = new Vector3(originalScale.x, originalScale.y, originalScale.z);
+                isCrouched = false;
+            }
+            // Crouches player down to set height
+            // Reduces walkSpeed
+            else
+            {
+                transform.localScale = new Vector3(originalScale.x, crouchHeight, originalScale.z);
+                isCrouched = true;
+            }
+                _input.crouch = false;
         }
 
         private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
