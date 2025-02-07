@@ -1068,6 +1068,8 @@ GameObject:
   - component: {fileID: 5885216827943657505}
   - component: {fileID: 135756642000475821}
   - component: {fileID: 4416926081852918493}
+  - component: {fileID: 7639244326532640346}
+  - component: {fileID: 4704240150438083860}
   m_Layer: 8
   m_Name: PlayerArmature
   m_TagString: Player
@@ -1195,9 +1197,9 @@ MonoBehaviour:
   enableSprint: 1
   unlimitedSprint: 0
   sprintDuration: 5
-  sprintCooldown: 0.5
+  sprintCooldown: 4
   sprintFOV: 80
-  sprintFOVStepTime: 10
+  sprintFOVStepTime: 100
   useSprintBar: 1
   hideBarWhenFull: 1
   sprintBarBG: {fileID: 0}
@@ -1207,6 +1209,10 @@ MonoBehaviour:
   enableCrouch: 1
   crouchHeight: 0.75
   speedReduction: 0.5
+  _hasKey: 0
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!114 &5885216827943657505
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1242,6 +1248,7 @@ MonoBehaviour:
   sprint: 0
   transiton: 0
   crouch: 0
+  interact: 0
   analogMovement: 0
   cursorLocked: 1
   cursorInputForLook: 1
@@ -1343,6 +1350,56 @@ MonoBehaviour:
   m_DefaultActionMap: Player
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
+--- !u!136 &7639244326532640346
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4416926081852918481}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.37
+  m_Height: 2.3262086
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.6631043, z: 0}
+--- !u!54 &4704240150438083860
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4416926081852918481}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 1
 --- !u!1 &4523139366846529165
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,7 +1,9 @@
 ﻿using Cinemachine;
 using UnityEngine;
 using UnityEngine.UI;
-#if ENABLE_INPUT_SYSTEM 
+using System.Collections;
+
+#if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
 
@@ -127,6 +129,10 @@ namespace StarterAssets
         private float _rotationVelocity;
         private float _verticalVelocity;
         private float _terminalVelocity = 53.0f;
+        [SerializeField] private bool _hasKey = false;
+
+        //Raycast Layers
+        [SerializeField] private LayerMask layerMask;
 
         // timeout deltatime
         private float _jumpTimeoutDelta;
@@ -163,8 +169,6 @@ namespace StarterAssets
 #endif
             }
         }
-
-
         private void Awake()
         {
             // get a reference to our main camera
@@ -181,6 +185,8 @@ namespace StarterAssets
                 sprintCooldownReset = sprintCooldown;
             }
             InitSprintBar();
+
+            layerMask = LayerMask.GetMask("Interactable");
 
         }
 
@@ -217,6 +223,47 @@ namespace StarterAssets
             Transiton();
             if(_input.crouch && Grounded)
                 Crouch();
+        }
+        private void FixedUpdate()
+        {
+            Interact();
+        }
+
+        private void Interact() 
+        {
+            if (_input.interact) 
+            {
+                RaycastHit hit;
+                // Does the ray intersect any objects excluding the player layer
+                Vector3 RaycastHitPos = transform.position;
+                RaycastHitPos.y += .5f;
+
+                if (Physics.Raycast(RaycastHitPos, transform.TransformDirection(Vector3.forward), out hit, 20, layerMask))
+
+                {
+                    if (hit.transform.gameObject.tag == "Door" && _hasKey)
+                    {
+                        Door door = hit.transform.gameObject.GetComponentInParent<Door>();
+                        if (!door)
+                            return;
+                        door.OpenDoor();
+                        _hasKey = false;
+                    }
+                    if (hit.transform.gameObject.tag == "Key")
+                    {
+                        _hasKey = true;
+                        Destroy(hit.transform.gameObject);
+                    }
+                    Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
+                    Debug.Log("Did Hit");
+                }
+                else
+                {
+                    Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * 1000, Color.white);
+                    Debug.Log("Did not Hit");
+                }
+            }
+            _input.interact = false;
         }
 
         private void Transiton()
@@ -360,6 +407,7 @@ namespace StarterAssets
             else 
             {
                 targetSpeed = MoveSpeed;
+                cinemachineFirstPersonFollower.m_Lens.FieldOfView = Mathf.Lerp(cinemachineFirstPersonFollower.m_Lens.FieldOfView, feildOfView, sprintFOVStepTime * Time.deltaTime); ;
                 sprintRemaining = Mathf.Clamp(sprintRemaining += 1 * Time.deltaTime, 0, sprintDuration);
             }
 
@@ -422,14 +470,17 @@ namespace StarterAssets
             // if there is a move input rotate player when the player is moving
             if (_input.move != Vector2.zero)
             {
-                if (hideBarWhenFull && !unlimitedSprint && targetSpeed == SprintSpeed)
+                if (hideBarWhenFull && !unlimitedSprint)
                 {
-                    sprintBarCG.alpha += 5 * Time.deltaTime;
+                    if(targetSpeed == SprintSpeed || targetSpeed == SprintSpeed * speedReduction)    
+                        sprintBarCG.alpha += 5 * Time.deltaTime;
                 }
-                if (hideBarWhenFull && sprintRemaining == sprintDuration && targetSpeed == MoveSpeed)
+                if (hideBarWhenFull && sprintRemaining == sprintDuration)
                 {
-                    sprintBarCG.alpha -= 3 * Time.deltaTime;
+                    if(targetSpeed == MoveSpeed || targetSpeed == MoveSpeed * speedReduction)
+                        sprintBarCG.alpha -= 3 * Time.deltaTime;
                 }
+
                 _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
                                   _mainCamera.transform.eulerAngles.y;
                 float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
