@@ -89,6 +89,7 @@ namespace StarterAssets
         [SerializeField] private Transform DownTargetPosition;
         [SerializeField] private CinemachineVirtualCamera cinemachineFirstPersonFollower;
         [SerializeField] private CinemachineVirtualCamera cinemachineThirdPersonFollower;
+        private bool _isInOtherPlane = false; 
         
         //sprinting
         private float _speed;
@@ -130,6 +131,8 @@ namespace StarterAssets
         private float _verticalVelocity;
         private float _terminalVelocity = 53.0f;
         [SerializeField] private bool _hasKey = false;
+        [SerializeField] private GameObject flashLight;
+        private bool _isFlashlightEnabled;
 
         //Raycast Layers
         [SerializeField] private LayerMask layerMask;
@@ -187,6 +190,8 @@ namespace StarterAssets
             InitSprintBar();
 
             layerMask = LayerMask.GetMask("Interactable");
+            _isInOtherPlane = false;
+            _isFlashlightEnabled = false;
 
         }
 
@@ -221,14 +226,27 @@ namespace StarterAssets
             GroundedCheck();
             Move();
             Transiton();
-            if(_input.crouch && Grounded)
-                Crouch();
+            Crouch();
+            UpdadteFlashlight();
         }
         private void FixedUpdate()
         {
             Interact();
         }
-
+        private void UpdadteFlashlight() 
+        {
+            if (_isInOtherPlane) 
+            {
+                _isFlashlightEnabled = false;
+                flashLight.SetActive(false); 
+            }
+            if (_input.flashlight && _isInOtherPlane == false) 
+            {
+                flashLight.SetActive(_isFlashlightEnabled);
+                _isFlashlightEnabled = !_isFlashlightEnabled;
+            }
+            _input.flashlight = false;
+        }
         private void Interact() 
         {
             if (_input.interact) 
@@ -275,6 +293,7 @@ namespace StarterAssets
                 _transitonTimeoutDelta = TransitonTimeout;
 
                 _transiton = !_transiton;
+                _isInOtherPlane = !_isInOtherPlane;
 
                 cinemachineFirstPersonFollower.gameObject.SetActive(_transiton);
                 cinemachineThirdPersonFollower.gameObject.SetActive(!_transiton);
@@ -579,21 +598,24 @@ namespace StarterAssets
 
         private void Crouch()
         {
-            // Stands player up to full height
-            // Brings walkSpeed back up to original speed
-            if (isCrouched)
+            if (_input.crouch && Grounded) 
             {
-                transform.localScale = new Vector3(originalScale.x, originalScale.y, originalScale.z);
-                isCrouched = false;
+                    // Stands player up to full height
+                    // Brings walkSpeed back up to original speed
+                    if (isCrouched)
+                {
+                    transform.localScale = new Vector3(originalScale.x, originalScale.y, originalScale.z);
+                    isCrouched = false;
+                }
+                // Crouches player down to set height
+                // Reduces walkSpeed
+                else
+                {
+                    transform.localScale = new Vector3(originalScale.x, crouchHeight, originalScale.z);
+                    isCrouched = true;
+                }
+                    _input.crouch = false;
             }
-            // Crouches player down to set height
-            // Reduces walkSpeed
-            else
-            {
-                transform.localScale = new Vector3(originalScale.x, crouchHeight, originalScale.z);
-                isCrouched = true;
-            }
-                _input.crouch = false;
         }
 
         private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
