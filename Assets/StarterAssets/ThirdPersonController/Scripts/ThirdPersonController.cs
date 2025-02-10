@@ -449,6 +449,16 @@ namespace StarterAssets
                 sprintBar.transform.localScale = new Vector3(sprintRemainingPercent, 1f, 1f);
             }
 
+            if (hideBarWhenFull && !unlimitedSprint)
+            {
+                if(targetSpeed == SprintSpeed || targetSpeed == SprintSpeed * speedReduction)    
+                    sprintBarCG.alpha += 5 * Time.deltaTime;
+            }
+            if (hideBarWhenFull && sprintRemaining == sprintDuration)
+            {
+                if(targetSpeed == MoveSpeed || targetSpeed == MoveSpeed * speedReduction)
+                    sprintBarCG.alpha -= 3 * Time.deltaTime;
+            }
             // a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
 
             // note: Vector2's == operator uses approximation so is not floating point error prone, and is cheaper than magnitude
@@ -489,16 +499,6 @@ namespace StarterAssets
             // if there is a move input rotate player when the player is moving
             if (_input.move != Vector2.zero)
             {
-                if (hideBarWhenFull && !unlimitedSprint)
-                {
-                    if(targetSpeed == SprintSpeed || targetSpeed == SprintSpeed * speedReduction)    
-                        sprintBarCG.alpha += 5 * Time.deltaTime;
-                }
-                if (hideBarWhenFull && sprintRemaining == sprintDuration)
-                {
-                    if(targetSpeed == MoveSpeed || targetSpeed == MoveSpeed * speedReduction)
-                        sprintBarCG.alpha -= 3 * Time.deltaTime;
-                }
 
                 _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
                                   _mainCamera.transform.eulerAngles.y;
