@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 820353160736398613}
   - component: {fileID: 3916953007015576756}
   - component: {fileID: 5882760930337115057}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: UpperDoorMesh
-  m_TagString: Untagged
+  m_TagString: Door
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -232,9 +232,9 @@ GameObject:
   - component: {fileID: 3618417974099749197}
   - component: {fileID: 1143903173061563089}
   - component: {fileID: 316800271945240875}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: LowerDoorMesh
-  m_TagString: Door
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
