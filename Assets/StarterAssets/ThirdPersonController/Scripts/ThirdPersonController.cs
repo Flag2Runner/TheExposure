@@ -272,6 +272,10 @@ namespace StarterAssets
                         _hasKey = true;
                         Destroy(hit.transform.gameObject);
                     }
+                    if (hit.transform.gameObject.tag == "Combination") 
+                    {
+                        hit.transform.gameObject.GetComponent<LockController>().EnableUI();
+                    }
                     Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
                     Debug.Log("Did Hit");
                 }
