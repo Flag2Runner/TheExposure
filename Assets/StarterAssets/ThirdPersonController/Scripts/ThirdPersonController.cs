@@ -139,7 +139,9 @@ namespace StarterAssets
         //UI
         [SerializeField] GameObject interactText;
         [SerializeField] GameObject paperHolder;
+        [SerializeField] GameObject lockSafe;
         private PaperUI _paperUI;
+        private LockController _lockController;
         private int paperIndex;
 
         //Raycast Layers
@@ -182,6 +184,7 @@ namespace StarterAssets
         }
         private void Awake()
         {
+            _lockController = lockSafe.GetComponent<LockController>();
             paperHolder.SetActive(true);
              _paperUI = paperHolder.GetComponent<PaperUI>();
             paperHolder.SetActive(false);
@@ -296,9 +299,9 @@ namespace StarterAssets
                         Paper currentPaper = hit.transform.gameObject.GetComponent<Paper>();
                         if (currentPaper != null && paperIndex != currentPaper.GetIndex())
                         {
-                            string newHintText = currentPaper.HintText;
-                            string newLoreText = currentPaper.LoreText;
                             paperIndex = currentPaper.GetIndex();
+                            string newHintText = _lockController.GetHintsString(paperIndex);
+                            string newLoreText = _lockController.GetLoreString(paperIndex);
                             paperHolder.transform.gameObject.SetActive(true);
                             _paperUI.UpdateUI(paperIndex, newHintText, newLoreText);
                         }
@@ -317,6 +320,7 @@ namespace StarterAssets
                 interactText.gameObject.SetActive(false);
                 Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * 1000, Color.white);
                 Debug.Log("Did not Hit");
+                _input.interact = false;
             }
 
         }

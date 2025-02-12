@@ -1179,9 +1179,17 @@ MonoBehaviour:
   - {fileID: 6686780644317142560}
   - {fileID: 0}
   result: 00000000000000000000000000000000
-  correctCombination: 03000000070000000500000009000000
-  hints: []
-  lore: []
+  correctCombination: 04000000070000000200000008000000
+  hints:
+  - Log.Red#4
+  - Log.Yellow#7
+  - Log.Blue#2
+  - Log.Green#8
+  lore:
+  - This is just some lore to put under it if you want I don't know yet
+  - This is The second different lore for more just type.
+  - This is just some lore to put under it if you want I don't know yet
+  - This is just some lore to put under it if you want I don't know yet
 --- !u!65 &1928321445432835444
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1478,15 +1486,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4581752600869528208, guid: c3b4356acfd247b409dce07cb25903fb, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.13141881
+      value: -0.0947
       objectReference: {fileID: 0}
     - target: {fileID: 4581752600869528208, guid: c3b4356acfd247b409dce07cb25903fb, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.014124634
+      value: -0.0141
       objectReference: {fileID: 0}
     - target: {fileID: 4581752600869528208, guid: c3b4356acfd247b409dce07cb25903fb, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.14756964
+      value: -0.1381
       objectReference: {fileID: 0}
     - target: {fileID: 4581752600869528208, guid: c3b4356acfd247b409dce07cb25903fb, type: 3}
       propertyPath: m_LocalRotation.w

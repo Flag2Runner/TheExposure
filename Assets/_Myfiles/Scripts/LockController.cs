@@ -16,15 +16,6 @@ public class LockController : MonoBehaviour
     private void Start()
     {
         Key.gameObject.SetActive(false);
-
-        hints = new string[] { $"{correctCombination[0]}", $"{correctCombination[1]}", $"{correctCombination[2]}", $"{correctCombination[3]}" };
-        lore = new string[] { "", "", "", "" };
-        Paper[] papers = GetComponents<Paper>();
-        foreach (Paper paper in papers) 
-        {
-            hints[paper.GetIndex()] = $"{paper.HintText} = {correctCombination[paper.GetIndex()]}";
-            lore[paper.GetIndex()] = paper.LoreText;
-        }
         result = new int[] { 0, 0, 0, 0 };
         
         Rotate.Rotated += CheckResults;
