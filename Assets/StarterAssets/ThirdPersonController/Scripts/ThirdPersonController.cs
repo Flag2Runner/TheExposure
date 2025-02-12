@@ -2,6 +2,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using TMPro;
+
 
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -134,6 +136,12 @@ namespace StarterAssets
         [SerializeField] private GameObject flashLight;
         private bool _isFlashlightEnabled;
 
+        //UI
+        [SerializeField] GameObject interactText;
+        [SerializeField] GameObject paperHolder;
+        private PaperUI _paperUI;
+        private int paperIndex;
+
         //Raycast Layers
         [SerializeField] private LayerMask layerMask;
 
@@ -174,6 +182,10 @@ namespace StarterAssets
         }
         private void Awake()
         {
+            paperHolder.SetActive(true);
+             _paperUI = paperHolder.GetComponent<PaperUI>();
+            paperHolder.SetActive(false);
+            paperIndex = -1;
             // get a reference to our main camera
             if (_mainCamera == null)
             {
@@ -249,15 +261,18 @@ namespace StarterAssets
         }
         private void Interact() 
         {
-            if (_input.interact) 
+            RaycastHit hit;
+            // Does the ray intersect any objects excluding the player layer
+            Vector3 RaycastHitPos = transform.position;
+            RaycastHitPos.y += .5f;
+
+            if (Physics.Raycast(RaycastHitPos, transform.TransformDirection(Vector3.forward), out hit, 2, layerMask))
             {
-                RaycastHit hit;
-                // Does the ray intersect any objects excluding the player layer
-                Vector3 RaycastHitPos = transform.position;
-                RaycastHitPos.y += .5f;
 
-                if (Physics.Raycast(RaycastHitPos, transform.TransformDirection(Vector3.forward), out hit, 20, layerMask))
-
+                interactText.gameObject.SetActive(true);
+                Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
+                Debug.Log("Did Hit");
+                if (_input.interact) 
                 {
                     if (hit.transform.gameObject.tag == "Door" && _hasKey)
                     {
@@ -276,16 +291,34 @@ namespace StarterAssets
                     {
                         hit.transform.gameObject.GetComponent<LockController>().EnableUI();
                     }
-                    Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
-                    Debug.Log("Did Hit");
-                }
-                else
-                {
-                    Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * 1000, Color.white);
-                    Debug.Log("Did not Hit");
+                    if (hit.transform.gameObject.tag == "Paper") 
+                    {
+                        Paper currentPaper = hit.transform.gameObject.GetComponent<Paper>();
+                        if (currentPaper != null && paperIndex != currentPaper.GetIndex())
+                        {
+                            string newHintText = currentPaper.HintText;
+                            string newLoreText = currentPaper.LoreText;
+                            paperIndex = currentPaper.GetIndex();
+                            paperHolder.transform.gameObject.SetActive(true);
+                            _paperUI.UpdateUI(paperIndex, newHintText, newLoreText);
+                        }
+                        else 
+                        {
+                            paperIndex = -1;
+                            paperHolder.transform.gameObject.SetActive(false);
+                        }
+
+                    }
+                    _input.interact = false;
                 }
             }
-            _input.interact = false;
+            else
+            {
+                interactText.gameObject.SetActive(false);
+                Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * 1000, Color.white);
+                Debug.Log("Did not Hit");
+            }
+
         }
 
         private void Transiton()

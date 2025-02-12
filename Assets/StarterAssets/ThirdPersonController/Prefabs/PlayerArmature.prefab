@@ -1212,9 +1212,11 @@ MonoBehaviour:
   speedReduction: 0.5
   _hasKey: 0
   flashLight: {fileID: 4900614641299949788}
+  interactText: {fileID: 0}
+  paperHolder: {fileID: 0}
   layerMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
 --- !u!114 &5885216827943657505
 MonoBehaviour:
   m_ObjectHideFlags: 0

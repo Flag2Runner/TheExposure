@@ -10,15 +10,33 @@ public class LockController : MonoBehaviour
     [SerializeField] private GameObject[] Targets;
     private bool isPadlockOnscreen;
     [SerializeField] private int[] result, correctCombination;
+    [SerializeField] private string[] hints , lore;
     
 
     private void Start()
     {
         Key.gameObject.SetActive(false);
 
+        hints = new string[] { $"{correctCombination[0]}", $"{correctCombination[1]}", $"{correctCombination[2]}", $"{correctCombination[3]}" };
+        lore = new string[] { "", "", "", "" };
+        Paper[] papers = GetComponents<Paper>();
+        foreach (Paper paper in papers) 
+        {
+            hints[paper.GetIndex()] = $"{paper.HintText} = {correctCombination[paper.GetIndex()]}";
+            lore[paper.GetIndex()] = paper.LoreText;
+        }
         result = new int[] { 0, 0, 0, 0 };
-        correctCombination = new int[] { 3, 7, 9, 5 };
+        
         Rotate.Rotated += CheckResults;
+    }
+    public string GetHintsString(int numberIndex) 
+    {
+        return hints[numberIndex];
+    }
+
+    public string GetLoreString(int numberIndex) 
+    {
+        return lore[numberIndex];
     }
 
     private void CheckResults(string wheelName, int number)
